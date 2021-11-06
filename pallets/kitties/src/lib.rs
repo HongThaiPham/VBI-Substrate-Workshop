@@ -28,7 +28,7 @@ pub mod pallet {
 	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo)]
 	#[scale_info(skip_type_params(T))]
 	pub struct Kitty<T: Config> {
-		pub dna: [u64; 128], // Kitty must have a 128 bit DNA
+		pub dna: [u8; 16], // Kitty must have a 128 bit DNA
 		pub price: Option<BalanceOf<T>>,
 		pub gender: Gender,
 		pub owner: AccountOf<T>,
@@ -59,7 +59,8 @@ pub mod pallet {
         /// The Currency handler for the Kitties pallet.
         type Currency: Currency<Self::AccountId>;
 
-        // TODO Part II: Specify the custom types for our runtime.
+        // Specify the type for Randomness we want to specify for runtime.
+		type KittyRandomness: Randomness<Self::Hash, Self::BlockNumber>;
 
     }
 
@@ -110,7 +111,18 @@ pub mod pallet {
 				_ => Gender::Female,
 			}
 		}
-        // TODO Part III: helper functions for dispatchable functions
+		// TODO Part III: helper functions for dispatchable functions
+
+
+		// funtion to randomly generate DNA
+		fn gen_dna() -> [u8; 16] {
+			let payload = (
+				T::KittyRandomness::random(&b"dna"[..]).0,
+				<frame_system::Pallet<T>>::block_number(),
+			);
+			payload.using_encoded(blake2_128)
+		}
+        
 
         // TODO: increment_nonce, random_hash, mint, transfer_from
 

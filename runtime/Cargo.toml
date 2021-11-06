@@ -4,7 +4,7 @@ branch = 'polkadot-v0.9.8'
 version = '4.0.0'
 
 [package]
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+authors = ['Hong Thai Pham <https://github.com/HongThaiPham>']
 edition = '2018'
 homepage = 'https://substrate.dev'
 license = 'Unlicense'

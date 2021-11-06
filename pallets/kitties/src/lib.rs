@@ -36,7 +36,15 @@ pub mod pallet {
 
 
 
-    // TODO Part II: Enum and implementation to handle Gender type in Kitty struct.
+    // Enum and implementation to handle Gender type in Kitty struct.
+	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo)]
+	#[scale_info(skip_type_params(T))]
+	#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+	pub enum Gender {
+		Male,
+		Female,
+	}
+
 
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
@@ -94,6 +102,14 @@ pub mod pallet {
     // TODO Parts II: helper function for Kitty struct
 
     impl<T: Config> Pallet<T> {
+		//helper function for Kitty struct
+		fn gen_gender() -> Gender {
+			let random = T::KittyRandomness::random(&b"gender"[..]).0;
+			match random.as_ref()[0] % 2 {
+				0 => Gender::Male,
+				_ => Gender::Female,
+			}
+		}
         // TODO Part III: helper functions for dispatchable functions
 
         // TODO: increment_nonce, random_hash, mint, transfer_from

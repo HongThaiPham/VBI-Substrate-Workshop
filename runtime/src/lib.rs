@@ -40,7 +40,7 @@ pub use frame_support::{
 use pallet_transaction_payment::CurrencyAdapter;
 
 /// Import the template pallet.
-pub use pallet_template;
+pub use pallet_kitties;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -89,8 +89,8 @@ pub mod opaque {
 //   https://substrate.dev/docs/en/knowledgebase/runtime/upgrades#runtime-versioning
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("node-template"),
-	impl_name: create_runtime_str!("node-template"),
+	spec_name: create_runtime_str!("node-kitties"),
+	impl_name: create_runtime_str!("node-kitties"),
 	authoring_version: 1,
 	// The version of the runtime specification. A full node will not attempt to use its native
 	//   runtime in substitute for the on-chain Wasm runtime unless all of `spec_name`,
@@ -268,7 +268,7 @@ impl pallet_sudo::Config for Runtime {
 }
 
 /// Configure the pallet-template in pallets/template.
-impl pallet_template::Config for Runtime {
+impl pallet_kitties::Config for Runtime {
 	type Event = Event;
 }
 
@@ -288,7 +288,7 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the pallet-template in the runtime.
-		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
+		TemplateModule: pallet_kitties::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -475,7 +475,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 			add_benchmark!(params, batches, pallet_balances, Balances);
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
-			add_benchmark!(params, batches, pallet_template, TemplateModule);
+			add_benchmark!(params, batches, pallet_kitties, TemplateModule);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)

@@ -148,10 +148,10 @@ pub mod pallet {
 		#[pallet::weight(100)]
 		pub fn create_kitty(origin: OriginFor<T>) -> DispatchResult {
 			// ACTION #1: create_kitty
-			let sender = ensure_signed(origin)?; // <- add this line
-			let kitty_id = Self::mint(&sender, None, None)?; // <- add this line
+			let sender = ensure_signed(origin)?;
+			let kitty_id = Self::mint(&sender, None, None)?; 
 			// Logging to the console
-			log::info!("A kitty is born with ID: {:?}.", kitty_id); // <- add this line
+			log::info!("A kitty is born with ID: {:?}.", kitty_id); 
 	
 			// ACTION #4: Deposit `Created` event
 			Self::deposit_event(Event::Created(sender, kitty_id));
@@ -182,7 +182,7 @@ pub mod pallet {
 
 
 		// funtion to randomly generate DNA
-		fn gen_dna() -> [u8; 16] {
+		fn random_dna() -> [u8; 16] {
 			let payload = (
 				T::KittyRandomness::random(&b"dna"[..]).0,
 				<frame_system::Pallet<T>>::block_number(),
@@ -199,7 +199,7 @@ pub mod pallet {
 			gender: Option<Gender>,
 		) -> Result<T::Hash, Error<T>> {
 			let kitty = Kitty::<T> {
-			dna: dna.unwrap_or_else(Self::gen_dna),
+			dna: dna.unwrap_or_else(Self::random_dna),
 			price: None,
 			gender: gender.unwrap_or_else(Self::gen_gender),
 			owner: owner.clone(),

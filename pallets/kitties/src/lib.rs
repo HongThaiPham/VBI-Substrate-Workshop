@@ -171,7 +171,37 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// TODO Part III: transfer
+		// transfer
+		#[pallet::weight(100)]
+		pub fn transfer(
+			origin: OriginFor<T>,
+			to: T::AccountId,
+			kitty_id: T::Hash,
+		) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+
+			// Ensure the kitty exists and is called by the kitty owner
+			ensure!(
+				Self::is_kitty_owner(&kitty_id, &from)?,
+				<Error<T>>::NotKittyOwner
+			);
+
+			// Verify the kitty is not transferring back to its owner.
+			ensure!(from != to, <Error<T>>::TransferToSelf);
+
+			// Verify the recipient has the capacity to receive one more kitty
+			let to_owned = <KittiesOwned<T>>::get(&to);
+			ensure!(
+				(to_owned.len() as u32) < T::MaxKittyOwned::get(),
+				<Error<T>>::ExceedMaxKittyOwned
+			);
+
+			Self::transfer_kitty_to(&kitty_id, &to)?;
+
+			Self::deposit_event(Event::Transferred(from, to, kitty_id));
+
+			Ok(())
+		}
 
 		// TODO Part III: buy_kitty
 
@@ -273,6 +303,37 @@ pub mod pallet {
 			<Kitties<T>>::insert(kitty_id, kitty);
 			<KittyCnt<T>>::put(new_cnt);
 			Ok(kitty_id)
+		}
+
+		#[transactional]
+		pub fn transfer_kitty_to(kitty_id: &T::Hash, to: &T::AccountId) -> Result<(), Error<T>> {
+			// lay kittie tu storage
+			let mut kitty = Self::kitties(&kitty_id).ok_or(<Error<T>>::KittyNotExist)?;
+
+			let prev_owner = kitty.owner.clone();
+
+			// Remove `kitty_id` from the KittyOwned vector of `prev_kitty_owner`
+			<KittiesOwned<T>>::try_mutate(&prev_owner, |owned| {
+				if let Some(ind) = owned.iter().position(|&id| id == *kitty_id) {
+					owned.swap_remove(ind);
+					return Ok(());
+				}
+				Err(())
+			})
+			.map_err(|_| <Error<T>>::KittyNotExist)?;
+
+			// Update the kitty owner
+			kitty.owner = to.clone();
+			// Reset the ask price so the kitty is not for sale until `set_price()` is called
+			// by the current owner.
+			kitty.price = None;
+
+			<Kitties<T>>::insert(kitty_id, kitty);
+
+			<KittiesOwned<T>>::try_mutate(to, |vec| vec.try_push(*kitty_id))
+				.map_err(|_| <Error<T>>::ExceedMaxKittyOwned)?;
+
+			Ok(())
 		}
 	}
 }

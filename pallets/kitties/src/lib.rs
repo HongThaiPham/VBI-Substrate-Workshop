@@ -2,7 +2,6 @@
 
 pub use pallet::*;
 
-
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
@@ -174,15 +173,17 @@ pub mod pallet {
 			let sender = ensure_signed(origin)?;
 
 			// Check: Verify `sender` owns both kitties (and both kitties exist).
-			ensure(Self::is_kitty_owner(&sender, &kitty_id_1)?,<Error<T>>::NotKittyOwner);
-			ensure(Self::is_kitty_owner(&sender, &kitty_id_2)?,<Error<T>>::NotKittyOwner);
+			ensure!(Self::is_kitty_owner(&kitty_id_1, &sender)?,<Error<T>>::NotKittyOwner);
+			ensure!(Self::is_kitty_owner(&kitty_id_2, &sender)?,<Error<T>>::NotKittyOwner);
 
-			let new_dna = Self::breed_dna(&kitty_id_1, &kitty_id_2)?;
+			let new_dna = Self::combine_dna(&kitty_id_1, &kitty_id_2)?;
 
 			Self::mint(&sender, Some(new_dna), None)?;
 
 			Ok(())
 		}
+
+		
 
     }
 
@@ -210,7 +211,7 @@ pub mod pallet {
 		}
 
 		//breed dna
-		fn breed_dna(kitty_id_1: &T::Hash, kitty_id_2: &T::Hash) -> Result<[u8; 16], Error<T>> {
+		fn combine_dna(kitty_id_1: &T::Hash, kitty_id_2: &T::Hash) -> Result<[u8; 16], Error<T>> {
 			let dna_1 = Self::kitties(kitty_id_1).ok_or(<Error<T>>::KittyNotExist)?.dna;
 			let dna_2 = Self::kitties(kitty_id_2).ok_or(<Error<T>>::KittyNotExist)?.dna;
 			let mut new_dna = [0u8; 16];
@@ -218,6 +219,13 @@ pub mod pallet {
 				new_dna[i] = (new_dna[i] & dna_1[i]) | (!new_dna[i] & dna_2[i]);
 			}
 			Ok(new_dna)
+		}
+
+		pub fn is_kitty_owner(kitty_id: &T::Hash, acct: &T::AccountId) -> Result<bool, Error<T>> {
+			match Self::kitties(kitty_id) {
+				Some(kitty) => Ok(kitty.owner == *acct),
+				None => Err(<Error<T>>::KittyNotExist)
+			}
 		}
         
 

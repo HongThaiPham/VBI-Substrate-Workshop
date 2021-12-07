@@ -164,7 +164,26 @@ pub mod pallet {
 
         // TODO Part III: buy_kitty
 
-        // TODO Part III: breed_kitty
+
+		/// Breed a Kitty.
+		///
+		/// Breed two kitties to create a new generation
+		/// of Kitties.
+		#[pallet::weight(100)]
+		pub fn breed_kitty(origin: OriginFor<T>, kitty_id_1: T::Hash, kitty_id_2: T::Hash) -> DispatchResult {
+			let sender = ensure_signed(origin)?;
+
+			// Check: Verify `sender` owns both kitties (and both kitties exist).
+			ensure(Self::is_kitty_owner(&sender, &kitty_id_1)?,<Error<T>>::NotKittyOwner);
+			ensure(Self::is_kitty_owner(&sender, &kitty_id_2)?,<Error<T>>::NotKittyOwner);
+
+			let new_dna = Self::breed_dna(&kitty_id_1, &kitty_id_2)?;
+
+			Self::mint(&sender, Some(new_dna), None)?;
+
+			Ok(())
+		}
+
     }
 
     // TODO Parts II: helper function for Kitty struct
@@ -188,6 +207,17 @@ pub mod pallet {
 				<frame_system::Pallet<T>>::block_number(),
 			);
 			payload.using_encoded(blake2_128)
+		}
+
+		//breed dna
+		fn breed_dna(kitty_id_1: &T::Hash, kitty_id_2: &T::Hash) -> Result<[u8; 16], Error<T>> {
+			let dna_1 = Self::kitties(kitty_id_1).ok_or(<Error<T>>::KittyNotExist)?.dna;
+			let dna_2 = Self::kitties(kitty_id_2).ok_or(<Error<T>>::KittyNotExist)?.dna;
+			let mut new_dna = [0u8; 16];
+			for i in 0..new_dna.len() {
+				new_dna[i] = (new_dna[i] & dna_1[i]) | (!new_dna[i] & dna_2[i]);
+			}
+			Ok(new_dna)
 		}
         
 
